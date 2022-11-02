@@ -868,7 +868,6 @@ inline void ConvertBaseDrawable(five::rmcDrawable* drawable, rdr3::gtaDrawable* 
 		}
 	}
 
-	out->SetName("drawable_from_redm_exporter_see_redm.gg.#dr");
 }
 
 template<>
@@ -883,6 +882,15 @@ rdr3::gtaDrawable* convert(five::gtaDrawable* drawable)
 		auto newBound = convert<rdr3::phBound*>(bound);
 		out->SetBound(newBound);
 	}
+
+	auto name = std::string(drawable->GetName());
+
+	if (name.find("redm.net") == std::string::npos)
+	{
+		name = "redm.net_" + name + "#dr";
+	}
+
+	out->SetName(name.c_str());
 
 	return out;
 }
