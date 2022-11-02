@@ -238,7 +238,7 @@ rdr3::grcVertexBufferD3D* convert(five::grcVertexBufferD3D* buffer)
 	auto of = buffer->GetVertexFormat();
 
 	int goff = 0;
-	
+
 	int toffs[16];
 	void* vb = NULL;
 
@@ -341,7 +341,7 @@ rdr3::grcVertexBufferD3D* convert(five::grcVertexBufferD3D* buffer)
 
 				char* outStart = (char*)vb + goff;
 				int toff = toffs[i];
-				
+
 				for (int v = 0; v < vc; v++)
 				{
 					char* inStart = ob + (v * vs) + toff;
@@ -450,8 +450,6 @@ rdr3::grmModel* convert(five::grmModel* model)
 		out->SetShaderMappings(ni, sms);
 	}
 
-	
-
 	return out;
 }
 
@@ -548,7 +546,6 @@ rdr3::pgDictionary<rdr3::grcTexturePC>* convert(five::pgDictionary<five::grcText
 	return out;
 }
 
-
 template<>
 rdr3::grmShaderGroup* convert(five::grmShaderGroup* shaderGroup)
 {
@@ -561,7 +558,7 @@ rdr3::grmShaderGroup* convert(five::grmShaderGroup* shaderGroup)
 	{
 		out->SetTextures(convert<rdr3::pgDictionary<rdr3::grcTexturePC>*>(texDict));
 	}
-	
+
 	rdr3::pgPtr<rdr3::grmShaderFx> newShaders[512];
 	int sh;
 
@@ -576,29 +573,30 @@ rdr3::grmShaderGroup* convert(five::grmShaderGroup* shaderGroup)
 		}
 		else if (shs == HashString("terrain_cb_4lyr") || shs == HashString("terrain_cb_4lyr_pxm") || shs == HashString("terrain_cb_4lyr_spec") || shs == HashString("terrain_cb_4lyr_lod") || shs == HashString("terrain_cb_4lyr_2tex") || shs == HashString("terrain_cb_4lyr_2tex_pxm") || shs == HashString("terrain_cb_4lyr_2tex_blend") || shs == HashString("terrain_cb_4lyr_2tex_blend_lod") || shs == HashString("terrain_cb_4lyr_cm") || shs == HashString("terrain_cb_4lyr_cm_tnt") || shs == HashString("terrain_cb_w_4lyr") || shs == HashString("terrain_cb_w_4lyr_pxm") || shs == HashString("terrain_cb_w_4lyr_pxm_spm") || shs == HashString("terrain_cb_w_4lyr_spec") || shs == HashString("terrain_cb_w_4lyr_spec_pxm") || shs == HashString("terrain_cb_w_4lyr_spec_int") || shs == HashString("terrain_cb_w_4lyr_spec_int_pxm") || shs == HashString("terrain_cb_w_4lyr_lod") || shs == HashString("terrain_cb_w_4lyr_2tex") || shs == HashString("terrain_cb_w_4lyr_2tex_pxm") || shs == HashString("terrain_cb_w_4lyr_2tex_blend") || shs == HashString("terrain_cb_w_4lyr_2tex_blend_tt") || shs == HashString("terrain_cb_w_4lyr_2tex_blend_ttn") || shs == HashString("terrain_cb_w_4lyr_2tex_blend_pxm") || shs == HashString("terrain_cb_w_4lyr_2tex_blend_pxm_spm") || shs == HashString("terrain_cb_w_4lyr_2tex_blend_pxm_tt_spm") || shs == HashString("terrain_cb_w_4lyr_2tex_blend_pxm_tn_spm") || shs == HashString("terrain_cb_w_4lyr_2tex_blend_lod") || shs == HashString("terrain_cb_w_4lyr_cm") || shs == HashString("terrain_cb_w_4lyr_cm_pxm") || shs == HashString("terrain_cb_w_4lyr_cm_pxm_tnt") || shs == HashString("terrain_cb_w_4lyr_cm_tnt") || shs == HashString("trees_shadow_proxy"))
 		{
-			shs = HashString("default");
+			shs = HashString("normal");
 		}
-		else if (shs == HashString("emissive_clip") || shs == HashString("emissivenight") || shs == HashString("emissive_additive_alpha") || shs == HashString("emissive_speclum") || shs == HashString("emissive_tnt") || shs == HashString("emissivenight_geomnightonly") || shs == HashString("decal_emissive_only") || shs == HashString("decal_emissivenight_only"))
+		else if (shs == HashString("emissive") || shs == HashString("emissive_clip") || shs == HashString("emissivenight") || shs == HashString("emissive_additive_alpha") || shs == HashString("emissive_speclum") || shs == HashString("emissive_tnt") || shs == HashString("emissivenight_geomnightonly") || shs == HashString("decal_emissive_only") || shs == HashString("decal_emissivenight_only"))
 		{
-			shs = HashString("emissivestrong");
+			shs = HashString("emissive_alpha");
+			osh->SetDrawBucket(1);
 		}
 		else if (shs == HashString("trees") || shs == HashString("trees_lod") || shs == HashString("trees_lod2") || shs == HashString("trees_camera_aligned") || shs == HashString("trees_camera_facing") || shs == HashString("trees_lod_tnt") || shs == HashString("trees_lod2d"))
 		{
 			shs = HashString("default");
-		}	
+		}
 		else if (shs == HashString("trees_normal") || shs == HashString("normal_diffspec"))
 		{
 			shs = HashString("normal");
 		}
-		else if (shs == HashString("trees_normal_spec_tnt") || shs == HashString("trees_normal_diffspec_tnt"))
+		else if (shs == HashString("trees_normal_spec_tnt") || shs == HashString("trees_normal_diffspec_tnt") || shs == HashString("cloth_normal_spec_tnt"))
 		{
 			shs = HashString("normal_spec_tnt");
 		}
-		else if (shs == HashString("trees_normal_spec") || shs == HashString("trees_normal_spec_camera_aligned") || shs == HashString("trees_normal_spec_camera_aligned_tnt") || shs == HashString("trees_normal_spec_camera_facing") || shs == HashString("trees_normal_spec_camera_facing_tnt") || shs == HashString("normal_spec_dpm") )
+		else if (shs == HashString("trees_normal_spec") || shs == HashString("trees_normal_spec_camera_aligned") || shs == HashString("trees_normal_spec_camera_aligned_tnt") || shs == HashString("trees_normal_spec_camera_facing") || shs == HashString("trees_normal_spec_camera_facing_tnt") || shs == HashString("normal_spec_dpm") || shs == HashString("trees_normal_diffspec"))
 		{
-			shs = HashString("normal_spec");
+			shs = HashString("normal_spec_um");
 		}
-		else if (shs == HashString("normal_spec_detail_dpm_tnt") || shs == HashString("normal_diffspec_detail_dpm_tnt") || shs == HashString("normal_spec_detail_dpm_vertdecal_tnt"))
+		else if (shs == HashString("normal_spec_detail_dpm_tnt") || shs == HashString("normal_diffspec_detail_dpm_tnt") || shs == HashString("normal_diffspec_detail_tnt") || shs == HashString("normal_spec_detail_dpm_vertdecal_tnt"))
 		{
 			shs = HashString("normal_spec_detail_tnt");
 		}
@@ -610,12 +608,12 @@ rdr3::grmShaderGroup* convert(five::grmShaderGroup* shaderGroup)
 		{
 			shs = HashString("normal_detail");
 		}
-		
+
 		else if (shs == HashString("cloth_spec_alpha"))
 		{
 			shs = HashString("cloth_default");
 		}
-				else if (shs == HashString("normal_terrain_wet"))
+		else if (shs == HashString("normal_terrain_wet"))
 		{
 			shs = HashString("default_terrain_wet");
 		}
@@ -733,6 +731,11 @@ rdr3::grmShaderGroup* convert(five::grmShaderGroup* shaderGroup)
 					*(float*)(value.data()) /= 160.f;
 				}
 
+				/*else if (oldShader->GetShaderHash() == HashString("terrain_cb_w_4lyr") && pn == HashString("Bumpiness"))
+				{
+					*(float*)(value.data()) *= 1.f;
+				}
+				*/
 				paramRefs.emplace_back(pn, value);
 			}
 		}
@@ -821,10 +824,10 @@ inline void ConvertBaseDrawable(five::rmcDrawable* drawable, rdr3::gtaDrawable* 
 
 	auto& lodGroup = out->GetLodGroup();
 	lodGroup.SetBounds(
-		oldLodGroup.GetBoundsMin(),
-		oldLodGroup.GetBoundsMax(),
-		oldLodGroup.GetCenter(),
-		oldLodGroup.GetRadius());
+	oldLodGroup.GetBoundsMin(),
+	oldLodGroup.GetBoundsMax(),
+	oldLodGroup.GetCenter(),
+	oldLodGroup.GetRadius());
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -864,6 +867,8 @@ inline void ConvertBaseDrawable(five::rmcDrawable* drawable, rdr3::gtaDrawable* 
 			lodGroup.SetDrawBucketMask(i, oldLodGroup.GetDrawBucketMask(i));
 		}
 	}
+
+	out->SetName("drawable_from_redm_exporter_see_redm.gg.#dr");
 }
 
 template<>
@@ -878,15 +883,6 @@ rdr3::gtaDrawable* convert(five::gtaDrawable* drawable)
 		auto newBound = convert<rdr3::phBound*>(bound);
 		out->SetBound(newBound);
 	}
-
-	auto name = std::string(drawable->GetName());
-
-	if (name.find("redm.net") == std::string::npos)
-	{
-		name = "redm.net_" + name;
-	}
-
-	out->SetName(name.c_str());
 
 	return out;
 }
