@@ -666,6 +666,10 @@ rdr3::grmShaderGroup* convert(five::grmShaderGroup* shaderGroup)
 				{
 					pn = HashString("TintPaletteTex");
 				}
+				else if (pn == HashString("HeightSampler"))
+				{
+					pn = HashString("heightTexture");
+				}
 
 				auto texture = (five::grcTextureRef*)params[i].GetValue();
 
