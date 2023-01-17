@@ -27,6 +27,9 @@
 #include <wrl.h>
 #include <wincodec.h>
 
+#include <shlwapi.h>
+#include <botan/base64.h>
+
 #include <nutsnbolts.h>
 
 #define WANT_CEF_INTERNALS
@@ -45,6 +48,11 @@
 #include <concurrent_unordered_set.h>
 
 using Microsoft::WRL::ComPtr;
+
+static hook::cdecl_stub<rage::five::pgDictionary<rage::grcTexture>*(void*, int)> textureDictionaryCtor([]()
+{
+	return hook::get_call(hook::get_pattern("E8 ? ? ? ? 48 8B F8 EB 02 33 FF 4C 8D 3D"));
+});
 
 class RuntimeTex
 {
@@ -82,15 +90,15 @@ public:
 	void SetTexture(rage::grcTexture* texture);
 
 private:
-	rage::grcTexture* m_texture;
+	rage::grcTexture* m_texture = nullptr;
 
 	fwRefContainer<fwRefCountable> m_reference;
 
-	int m_pitch;
+	int m_pitch = 0;
 
 	std::vector<uint8_t> m_backingPixels;
 
-	bool m_owned;
+	bool m_owned = false;
 };
 
 class RuntimeTxd
@@ -105,12 +113,15 @@ public:
 	RuntimeTex* CreateTextureFromDui(const char* name, const char* duiHandle);
 
 private:
-	uint32_t m_txdIndex;
+	void EnsureTxd();
+
+private:
+	uint32_t m_txdIndex = -1;
 	std::string m_name;
 
 	std::unordered_map<std::string, std::shared_ptr<RuntimeTex>> m_textures;
 
-	rage::five::pgDictionary<rage::grcTexture>* m_txd;
+	rage::five::pgDictionary<rage::grcTexture>* m_txd = nullptr;
 };
 
 RuntimeTex::RuntimeTex(const char* name, int width, int height)
@@ -235,11 +246,17 @@ void RuntimeTex::Commit()
 }
 
 RuntimeTxd::RuntimeTxd(const char* name)
+	: m_name(name)
+{
+	EnsureTxd();
+}
+
+void RuntimeTxd::EnsureTxd()
 {
 	streaming::Manager* streaming = streaming::Manager::GetInstance();
 	auto txdStore = streaming->moduleMgr.GetStreamingModule("ytd");
 
-	txdStore->FindSlotFromHashKey(&m_txdIndex, name);
+	txdStore->FindSlotFromHashKey(&m_txdIndex, m_name.c_str());
 
 	if (m_txdIndex != 0xFFFFFFFF)
 	{
@@ -247,14 +264,17 @@ RuntimeTxd::RuntimeTxd(const char* name)
 
 		if (!entry.handle)
 		{
-			m_name = name;
-			m_txd = new rage::five::pgDictionary<rage::grcTexture>();
+			void* memoryStub = rage::GetAllocator()->Allocate(sizeof(rage::five::pgDictionary<rage::grcTexture>), 16, 0);
+			m_txd = textureDictionaryCtor(memoryStub, 1);
 
 			streaming::strAssetReference ref;
 			ref.asset = m_txd;
 
 			txdStore->SetResource(m_txdIndex, ref);
 			entry.flags = (512 << 8) | 1;
+			entry.flags |= (0x20000000); // SetDoNotDefrag
+
+			txdStore->AddRef(m_txdIndex);
 		}
 	}
 }
@@ -352,18 +372,55 @@ RuntimeTex* RuntimeTxd::CreateTextureFromImage(const char* name, const char* fil
 		HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory1, nullptr, CLSCTX_INPROC_SERVER, __uuidof(IWICImagingFactory), (void**)g_imagingFactory.GetAddressOf());
 	}
 
-	fx::OMPtr<IScriptRuntime> runtime;
+	ComPtr<IStream> stream;
 
-	if (!FX_SUCCEEDED(fx::GetCurrentScriptRuntime(&runtime)))
+	std::string fileNameString(fileName);
+
+	if (fileNameString.find("data:") == 0)
 	{
-		return nullptr;
+		auto f = fileNameString.find("base64,");
+
+		if (f == std::string::npos)
+		{
+			return nullptr;
+		}
+
+		fileNameString = fileNameString.substr(f + 7);
+
+		std::string decodedURL;
+		UrlDecode(fileNameString, decodedURL, false);
+
+		decodedURL.erase(std::remove_if(decodedURL.begin(), decodedURL.end(), [](char c)
+		{
+			return std::isspace<char>(c, std::locale::classic());
+		}), decodedURL.end());
+
+		size_t length = decodedURL.length();
+		size_t paddingNeeded = 4 - (length % 4);
+
+		if ((paddingNeeded == 1 || paddingNeeded == 2) && decodedURL[length - 1] != '=') {
+			decodedURL.resize(length + paddingNeeded, '=');
+		}
+
+		auto imageData = Botan::base64_decode(decodedURL, false);
+
+		stream = SHCreateMemStream(imageData.data(), imageData.size());
+	}
+	else
+	{
+		fx::OMPtr<IScriptRuntime> runtime;
+
+		if (!FX_SUCCEEDED(fx::GetCurrentScriptRuntime(&runtime)))
+		{
+			return nullptr;
+		}
+
+		fx::Resource* resource = reinterpret_cast<fx::Resource*>(runtime->GetParentObject());
+
+		stream = vfs::CreateComStream(vfs::OpenRead(resource->GetPath() + "/" + fileName));
 	}
 
-	fx::Resource* resource = reinterpret_cast<fx::Resource*>(runtime->GetParentObject());
-
 	ComPtr<IWICBitmapDecoder> decoder;
-
-	ComPtr<IStream> stream = vfs::CreateComStream(vfs::OpenRead(resource->GetPath() + "/" + fileName));
 
 	HRESULT hr = g_imagingFactory->CreateDecoderFromStream(stream.Get(), nullptr, WICDecodeMetadataCacheOnDemand, decoder.GetAddressOf());
 
