@@ -594,7 +594,7 @@ rdr3::grmShaderGroup* convert(five::grmShaderGroup* shaderGroup)
 		}
 		else if (shs == HashString("trees_normal_spec") || shs == HashString("trees_normal_spec_camera_aligned") || shs == HashString("trees_normal_spec_camera_aligned_tnt") || shs == HashString("trees_normal_spec_camera_facing") || shs == HashString("trees_normal_spec_camera_facing_tnt") || shs == HashString("normal_spec_dpm") || shs == HashString("trees_normal_diffspec"))
 		{
-			shs = HashString("normal_spec_um");
+			shs = HashString("normal_spec");
 		}
 		else if (shs == HashString("normal_spec_detail_dpm_tnt") || shs == HashString("normal_diffspec_detail_dpm_tnt") || shs == HashString("normal_diffspec_detail_tnt") || shs == HashString("normal_spec_detail_dpm_vertdecal_tnt"))
 		{
@@ -680,10 +680,12 @@ rdr3::grmShaderGroup* convert(five::grmShaderGroup* shaderGroup)
 
 				if (out->GetTextures())
 				{
+
 					for (auto& outTexture : *out->GetTextures())
 					{
 						if (!_stricmp(outTexture.second->GetName(), textureName))
 						{
+
 							textureRefs.push_back({ pn, outTexture.second });
 							found = true;
 
@@ -734,12 +736,12 @@ rdr3::grmShaderGroup* convert(five::grmShaderGroup* shaderGroup)
 				{
 					*(float*)(value.data()) /= 160.f;
 				}
-
 				/*else if (oldShader->GetShaderHash() == HashString("terrain_cb_w_4lyr") && pn == HashString("Bumpiness"))
 				{
 					*(float*)(value.data()) *= 1.f;
 				}
 				*/
+
 				paramRefs.emplace_back(pn, value);
 			}
 		}
@@ -871,7 +873,6 @@ inline void ConvertBaseDrawable(five::rmcDrawable* drawable, rdr3::gtaDrawable* 
 			lodGroup.SetDrawBucketMask(i, oldLodGroup.GetDrawBucketMask(i));
 		}
 	}
-
 }
 
 template<>
