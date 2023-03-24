@@ -3228,59 +3228,8 @@ static void FreeArchetypesHook(uint32_t idx)
 DLL_IMPORT extern fwEvent<> PreSetupLoadingScreens;
 #endif
 
-#ifdef IS_RDR3
-struct pgDictionary
-{
-	char pad[0x18];
-	uint32_t usageCount;
-};
-
-struct grmShaderGroup
-{
-	void* vtable;
-	pgDictionary* texture;
-};
-
-struct gtaDrawable
-{
-	char pad1[0x10];
-	grmShaderGroup* shaderGroup;
-	char pad2[0x90];
-	char* debugName;
-};
-
-static void* (*g_origDestroyGtaDrawable)(gtaDrawable*);
-
-static void* DestroyGtaDrawable(gtaDrawable* drawable)
-{
-	if (drawable->shaderGroup && drawable->shaderGroup->texture)
-	{
-		trace("DestroyRmcDrawable %s | usage count = %d\n", drawable->debugName, drawable->shaderGroup->texture->usageCount);
-	}
-
-	// resolve converted asset crashes
-	if (drawable->debugName[0] == 'r' && drawable->debugName[1] == 'e' && drawable->debugName[2] == 'd')
-	{
-		if (drawable->shaderGroup && drawable->shaderGroup->texture)
-		{
-			drawable->shaderGroup->texture->usageCount = 2;
-		}
-	}
-
-	return g_origDestroyGtaDrawable(drawable);
-}
-#endif
-
 static HookFunction hookFunction([]()
 {
-#ifdef IS_RDR3
-	{
-		MH_Initialize();
-		MH_CreateHook(hook::get_pattern("74 24 83 C8 FF F0 0F C1 41 18 83 F8 01 75", -29), DestroyGtaDrawable, (void**)&g_origDestroyGtaDrawable);
-		MH_EnableHook(MH_ALL_HOOKS);
-	}
-#endif
-
 #ifdef GTA_FIVE
 	PreSetupLoadingScreens.Connect([]()
 	{
