@@ -495,7 +495,7 @@ static uint32_t MapPixelFormat(uint32_t format)
 		{ D3DFMT_ATI1, rdr3::sgaBufferFormat::BC4_UNORM },
 		{ D3DFMT_ATI2, rdr3::sgaBufferFormat::BC5_UNORM },
 
-		{ D3DFMT_A8R8G8B8, rdr3::sgaBufferFormat::B8G8R8A8_UNORM },
+		{ D3DFMT_A8R8G8B8, rdr3::sgaBufferFormat::B8G8R8A8_UNORM_SRGB },
 
 		{ D3DFMT_A8, rdr3::sgaBufferFormat::A8_UNORM },
 		{ D3DFMT_R5G6B5, rdr3::sgaBufferFormat::B5G6R5_UNORM },
@@ -527,10 +527,19 @@ rdr3::pgDictionary<rdr3::grcTexturePC>* convert(five::pgDictionary<five::grcText
 		for (auto& texture : *txd)
 		{
 			five::grcTexturePC* oldTexture = texture.second;
+			uint32_t temp = MapPixelFormat(oldTexture->GetPixelFormat());
+			if (!endsWith(oldTexture->GetName(), "_n") && !endsWith(oldTexture->GetName(), "_s") && !endsWith(oldTexture->GetName(), "_h") && temp == rdr3::sgaBufferFormat::BC1_UNORM)
+			{
+				temp = rdr3::sgaBufferFormat::BC1_UNORM_SRGB;
+			}
+			else if (!endsWith(oldTexture->GetName(), "_n") && !endsWith(oldTexture->GetName(), "_s") && !endsWith(oldTexture->GetName(), "_h") && temp == rdr3::sgaBufferFormat::BC3_UNORM)
+			{
+				temp = rdr3::sgaBufferFormat::BC3_UNORM_SRGB;
+			}
 			rdr3::grcTexturePC* newTexture = new (false) rdr3::grcTexturePC(
 			oldTexture->GetWidth(),
 			oldTexture->GetHeight(),
-			MapPixelFormat(oldTexture->GetPixelFormat()),
+			temp,
 			oldTexture->GetStride(),
 			oldTexture->GetLevels(),
 			oldTexture->GetPixelData());
